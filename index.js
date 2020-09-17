@@ -8,7 +8,6 @@ pump(
   process.stdin,
   split(JSON.parse),
   through.obj(function (chunk, _enc, cb) {
-    if (!opts.url) throw new Error("Webhook url not set!");
     if (opts.level && Number(chunk.level) < Number(opts.level)) return;
 
     // Send to hook
