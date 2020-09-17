@@ -12,7 +12,7 @@ exports.opts = require("commander")
     // "https://discord.com/api/webhooks/{webhook.id}/{webhook.token}"
   )
   .option("-l, --level <level>", "set log level pipe to webhook", "30")
-  .option("-m, --mentions", "set mentions, split with ','")
+  .option("-m, --mentions <mentions>", "set mentions, id split with ','")
   .option("-u, --username <bot>", "set bot name", "pino-discord")
   .parse(process.argv)
   .opts();
@@ -28,15 +28,17 @@ pid: ${log.pid},
 hostname: ${log.hostname},
 msg: ${log.msg}
 ---`;
-  console.log(opts);
   if (opts.mentions) {
-    content = content + "\n" + "@here";
+    const names = opts.mentions.split(",").map((n) => "<@!" + n.trim() + ">");
+    content = content + "\n" + names.join(", ");
+    console.log(content);
   }
   return {
-    username: opts.username || "pino-discord",
+    username: opts.username,
     content,
     allowed_mentions: {
-      parse: [],
+      parse: ["users"],
+      users: [],
     },
   };
 };
