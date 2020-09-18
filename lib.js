@@ -1,21 +1,19 @@
+const { URL } = require("url");
 const { version, name, description } = require("./package.json");
 /**
  * Parse argv
  */
-exports.opts = require("commander")
+const program = require("commander")
   .version(version)
   .name(name)
   .description(description)
-  .requiredOption(
-    "-u, --url <url>",
-    "*required, set webhook url"
-    // "https://discord.com/api/webhooks/{webhook.id}/{webhook.token}"
-  )
+  .arguments("[discord-webhook]")
   .option("-l, --level <level>", "set log level pipe to webhook", "30")
   .option("-m, --mentions <mentions>", "set mentions, id split with ','")
   .option("-u, --username <bot>", "set bot name", "pino-discord")
-  .parse(process.argv)
-  .opts();
+  .parse(process.argv);
+const url = new URL(program.args[0]); // Validation
+exports.cli = { url, opts: program.opts() };
 
 /**
  * Format to discord payload with options
@@ -29,9 +27,17 @@ hostname: ${log.hostname},
 msg: ${log.msg}
 ---`;
   if (opts.mentions) {
-    const names = opts.mentions.split(",").map((n) => "<@!" + n.trim() + ">");
+    const names = opts.mentions.split(",").map((n) => {
+      const target = n.toLowerCase().trim();
+      if (target === "here" || target === "everyone") {
+        // Is Everyone
+        return "@" + n.trim();
+      } else {
+        // Is user or role
+        return "<@" + n.trim() + ">";
+      }
+    });
     content = content + "\n" + names.join(", ");
-    console.log(content);
   }
   return {
     username: opts.username,
@@ -44,18 +50,16 @@ msg: ${log.msg}
 };
 
 const https = require("https");
-const { URL } = require("url");
 /**
  * https post helper
  *
- * @param {string} url
+ * @param {URL} url
  * @param {object} body
  */
 exports.post = (url, body) => {
   const data = JSON.stringify(body, null, 2);
-
   const req = https.request(
-    new URL(url),
+    url,
     {
       method: "POST",
       headers: {
@@ -64,12 +68,14 @@ exports.post = (url, body) => {
       },
     },
     (res) => {
-      console.log("status:", res.statusCode);
       let d = "";
       res.on("data", (_d) => (d += _d));
-      res.on("end", () => {
-        console.log(d);
-      });
+      if (res.statusCode >= 400) {
+        console.error("status:", res.statusCode);
+        res.on("end", () => {
+          console.error(d);
+        });
+      }
     }
   );
   req.on("error", console.error);

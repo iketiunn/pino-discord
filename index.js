@@ -1,4 +1,8 @@
-const { opts, post, makeBody } = require("./lib");
+const {
+  cli: { url, opts },
+  post,
+  makeBody,
+} = require("./lib");
 
 const split = require("split2");
 const pump = require("pump");
@@ -11,7 +15,7 @@ pump(
     if (opts.level && Number(chunk.level) < Number(opts.level)) return;
 
     // Send to hook
-    post(opts.url, makeBody(opts, chunk));
+    post(url, makeBody(opts, chunk));
     cb();
   })
 );
