@@ -12,10 +12,12 @@ pump(
   process.stdin,
   split(JSON.parse),
   through.obj(function (chunk, _enc, cb) {
-    if (opts.level && Number(chunk.level) < Number(opts.level)) return;
+    console.log(chunk);
+    if (opts.level && Number(chunk.level) >= Number(opts.level)) {
+      // Send to hook
+      post(url, makeBody(opts, chunk));
+    }
 
-    // Send to hook
-    post(url, makeBody(opts, chunk));
     cb();
   })
 );
