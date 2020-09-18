@@ -1,7 +1,7 @@
 {
   "name": "pino-discord",
   "description": "Pipe your pino log to discord through discord webhook",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
