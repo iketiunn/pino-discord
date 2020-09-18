@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const {
   cli: { url, opts },
   post,
